@@ -121,22 +121,12 @@ const init3DEffects = () => {
   );
 
   cards.forEach((card) => {
-    card.addEventListener("mousemove", (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      const rotateX = (y - centerY) / 20;
-      const rotateY = (centerX - x) / 20;
-
+    card.style.transition = "transform 0.5s ease";
+    card.addEventListener("mouseenter", () => {
       card.style.transform = `
         perspective(1000px)
-        rotateX(${rotateX}deg)
-        rotateY(${rotateY}deg)
         translateZ(20px)
+        scale(1.05)
       `;
     });
 
@@ -148,24 +138,31 @@ const init3DEffects = () => {
   // Section effects
   const sections = document.querySelectorAll("section");
   sections.forEach((section) => {
-    section.addEventListener("mousemove", (e) => {
-      const rect = section.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      const rotateX = ((y - rect.height / 2) / 1000) * 5;
-      const rotateY = ((x - rect.width / 2) / 1000) * -5;
-
+    section.style.transition = "transform 0.5s ease";
+    section.addEventListener("mouseenter", () => {
       section.style.transform = `
         perspective(1000px)
-        rotateX(${rotateX}deg)
-        rotateY(${rotateY}deg)
         scale(1.02)
       `;
     });
 
     section.addEventListener("mouseleave", () => {
       section.style.transform = "none";
+    });
+  });
+
+  const educationCards = document.querySelectorAll(".education-card");
+
+  educationCards.forEach((card) => {
+    card.addEventListener("click", (e) => {
+      const name = card.querySelector("h3").textContent;
+      if (name.includes("KIPS College")) {
+        window.location.href = "https://kipscolleges.com/";
+      } else if (name.includes("The Punjab School")) {
+        window.location.href = "https://www.thepunjabschool.edu.pk/";
+      } else if (name.includes("University of Central Punjab")) {
+        window.location.href = "https://ucp.edu.pk/";
+      }
     });
   });
 };
@@ -175,24 +172,46 @@ const initFormHandling = () => {
   const form = document.querySelector(".contact-form");
   if (!form) return;
 
+  const validateEmail = (email) => {
+    const re = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    return re.test(email);
+  };
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const button = form.querySelector(".submit-btn");
+    const email = form.querySelector("#email").value;
+
+    if (!validateEmail(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
 
     // Loading state
     button.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
 
-    // Simulate form submission
-    setTimeout(() => {
-      button.innerHTML = '<i class="fas fa-check"></i> Sent!';
-      form.reset();
+    const formData = {
+      name: form.querySelector("#name").value,
+      email: email,
+      subject: form.querySelector("#subject").value,
+      message: form.querySelector("#message").value
+    };
 
-      // Reset button after 2 seconds
-      setTimeout(() => {
-        button.innerHTML =
-          '<span>Send Message</span><i class="fas fa-paper-plane"></i>';
-      }, 2000);
-    }, 1500);
+    emailjs.send('service_rgcwxpu', 'YOUR_TEMPLATE_ID', formData)
+      .then(function(response) {
+        console.log('SUCCESS!', response.status, response.text);
+        button.innerHTML = '<i class="fas fa-check"></i> Sent!';
+        form.reset();
+      }, function(error) {
+        console.log('FAILED...', error);
+        alert('Failed to send message. Please try again.');
+        button.innerHTML = '<span>Send Message</span><i class="fas fa-paper-plane"></i>';
+      });
+
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      button.innerHTML = '<span>Send Message</span><i class="fas fa-paper-plane"></i>';
+    }, 2000);
   });
 };
 
